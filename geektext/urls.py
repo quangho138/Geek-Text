@@ -6,4 +6,6 @@ urlpatterns = [
 
     # Profile / user management routes
     path("users/", include("users.urls")),
+
+    path("api/", include("books.urls")),
 ]
