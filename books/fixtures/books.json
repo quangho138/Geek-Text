@@ -1,0 +1,50 @@
+[
+  {
+    "model": "books.author",
+    "pk": 1,
+    "fields": {
+      "first_name": "Alice",
+      "last_name": "Walker",
+      "biography": "Fantasy novelist and world builder.",
+      "publisher": "Penguin"
+    }
+  },
+  {
+    "model": "books.author",
+    "pk": 2,
+    "fields": {
+      "first_name": "Bob",
+      "last_name": "Smith",
+      "biography": "Technology educator and Python expert.",
+      "publisher": "O'Reilly"
+    }
+  },
+  {
+    "model": "books.book",
+    "fields": {
+      "isbn": "9780000000001",
+      "name": "Dragon Moon",
+      "description": "A fantasy adventure about a rare dragon and an unlikely hero.",
+      "price": "19.99",
+      "genre": "Fantasy",
+      "publisher": "Penguin",
+      "year_published": 2021,
+      "copies_sold": 1200,
+      "author": 1
+    }
+  },
+  {
+    "model": "books.book",
+    "fields": {
+      "isbn": "9780000000002",
+      "name": "Python for Beginners",
+      "description": "A beginner-friendly guide to Python fundamentals.",
+      "price": "29.99",
+      "genre": "Education",
+      "publisher": "O'Reilly",
+      "year_published": 2020,
+      "copies_sold": 3000,
+      "author": 2
+    }
+  }
+]
