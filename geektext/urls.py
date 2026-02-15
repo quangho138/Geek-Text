@@ -9,4 +9,5 @@ urlpatterns = [
 
     # API routes
     path("api/", include("books.urls")),
+    path('api/', include('cart.urls')),
 ]
