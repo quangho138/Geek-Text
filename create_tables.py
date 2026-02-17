@@ -6,7 +6,7 @@ Within your virtual environment, run:
 pip install psycopg2-binary
 pip install python-dotenv
 
- - make sure you have a .env file that contains the connection info below
+ - make sure you have a .env file that contains the connection info (db_name, db_user, etc.) below
  - make sure you created the database already (CREATE DATABASE <dbname>;) within postgres
 """
 
@@ -35,12 +35,15 @@ def create_tables():
     cur = conn.cursor()
 
     cur.execute("""
+                
         CREATE TABLE IF NOT EXISTS Publisher (
             id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
             name VARCHAR(150)
         );
+        -- Can be removed and placed with either the Book or Author instead
 
 
+                
         CREATE TABLE IF NOT EXISTS Book ( 
             id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
             isbn VARCHAR(13) UNIQUE,
@@ -75,7 +78,7 @@ def create_tables():
             book_id INTEGER NOT NULL,
             
             FOREIGN KEY (author_id) REFERENCES Author(id) ON DELETE CASCADE,
-            FOREIGN KEY (book_id) REFERENCES Book(book_id) ON DELETE CASCADE,
+            FOREIGN KEY (book_id) REFERENCES Book(id) ON DELETE CASCADE,
             PRIMARY KEY (author_id, book_id)
         );  
          -- If we completely removed this table and added author_id as a foreign key in the Book table, then that would mean that ONLY 1 author can create 1 book. 
@@ -90,13 +93,14 @@ def create_tables():
             first_name VARCHAR(150),
             last_name VARCHAR(150),
             email TEXT UNIQUE,
-            home_address TEXT,
-            );
+            home_address TEXT
+        );
 
 
 
         -- Orders are needed for the Book Reviews portion since it states a user can only review a book they purchased. 
         -- So this keeps track of order ids. And OrderItem keeps track of the books a user actually purchased.
+                
         CREATE TABLE IF NOT EXISTS Orders (
             order_id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
             total_price NUMERIC(10, 2) NOT NULL,
@@ -115,31 +119,33 @@ def create_tables():
 
             CONSTRAINT check_QuantityGreaterThanZero CHECK (quantity > 0),
             FOREIGN KEY (order_id) REFERENCES Orders(order_id) ON DELETE CASCADE,
-            FOREIGN KEY (book_id) REFERENCES Book(book_id) ON DELETE CASCADE,
+            FOREIGN KEY (book_id) REFERENCES Book(id) ON DELETE CASCADE,
             PRIMARY KEY (order_id, book_id)
         );
 
         
         
         CREATE TABLE IF NOT EXISTS CartItem (
+            id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
             user_id INTEGER NOT NULL,
             book_id INTEGER NOT NULL,
             quantity INT,
 
             CONSTRAINT check_QuantityGreaterThanZero CHECK (quantity > 0),
+            CONSTRAINT unique_user_book UNIQUE (user_id, book_id),
+            
             FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
-            FOREIGN KEY (book_id) REFERENCES Book(book_id) ON DELETE CASCADE,
-            PRIMARY KEY (user_id, book_id)
+            FOREIGN KEY (book_id) REFERENCES Book(id) ON DELETE CASCADE
         );
         -- get unit price, book title, and author by doing a JOIN query with Book and Author
 
 
 
         CREATE TABLE IF NOT EXISTS CreditCard (
+            id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
             user_id INTEGER NOT NULL,
             card_number VARCHAR(32) NOT NULL,
-            FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
-            PRIMARY KEY (user_id, card_number)
+            FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
         );
 
 
@@ -157,9 +163,9 @@ def create_tables():
 
         CREATE TABLE IF NOT EXISTS WishlistItem (
             wishlist_id INTEGER NOT NULL,
-            book_id INTEGER NOT NULL
+            book_id INTEGER NOT NULL,
             FOREIGN KEY (wishlist_id) REFERENCES Wishlist(id) ON DELETE CASCADE,
-            FOREIGN KEY (book_id) REFERENCES Book(book_id) ON DELETE CASCADE,
+            FOREIGN KEY (book_id) REFERENCES Book(id) ON DELETE CASCADE,
             PRIMARY KEY (wishlist_id, book_id)
         );
 
@@ -168,14 +174,16 @@ def create_tables():
         -- users can only create 1 review per book
 
         CREATE TABLE IF NOT EXISTS Review (
+            id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
             user_id INTEGER NOT NULL,
             book_id INTEGER NOT NULL,
             rating INTEGER CHECK (rating BETWEEN 1 AND 5),
             comment VARCHAR(255),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                
+            CONSTRAINT unique_review_user_book UNIQUE (user_id, book_id),
             FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
-            FOREIGN KEY (book_id) REFERENCES Book(book_id) ON DELETE CASCADE,
-            PRIMARY KEY (user_id, book_id)
+            FOREIGN KEY (book_id) REFERENCES Book(id) ON DELETE CASCADE
         );
     """)
 

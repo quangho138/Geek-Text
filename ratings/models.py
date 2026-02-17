@@ -1,12 +1,11 @@
 from django.db import models
 from books.models import Book
-from users.models import Profile
+from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Review(models.Model):
-  pk = models.CompositePrimaryKey("user_id", "book_id")
-  user= models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='reviews', null=False)
+  user= models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews', null=False)
   book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='reviews', null=False)
   rating = models.IntegerField(
     validators=[
@@ -15,8 +14,8 @@ class Review(models.Model):
     ]
   )
 
-  comment = models.CharField(max_length=255, blank=True)
-  created_at = models.DateTimeField(auto_now_add=True)
+  comment = models.CharField(max_length=255, blank=True, null=True)
+  created_at = models.DateTimeField(auto_now_add=True, null=True)
 
   class Meta:
     constraints = [
@@ -25,3 +24,4 @@ class Review(models.Model):
             name='check_rating_between_1_and_5'
         )
     ]
+    unique_together = ('user', 'book')
