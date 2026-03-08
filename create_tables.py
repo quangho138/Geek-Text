@@ -180,6 +180,7 @@ def create_tables():
             rating INTEGER CHECK (rating BETWEEN 1 AND 5),
             comment VARCHAR(255),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
                 
             CONSTRAINT unique_review_user_book UNIQUE (user_id, book_id),
             FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,

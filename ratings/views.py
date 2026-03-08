@@ -6,10 +6,12 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
+from django.core.exceptions import ObjectDoesNotExist
+
 
 
 @api_view(['POST'])
-def create_rating(request, book_id):
+def create_review(request, book_id):
 
   # tries to find the book in the database. If it doesn't exist, a Book.DoesNotExist exception is raised.
   try:
@@ -32,6 +34,32 @@ def create_rating(request, book_id):
   
   # if .is_valid() fails, return the error messages
   return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PATCH'])
+def update_review(request, book_id, review_id):
+
+  try:
+     book = Book.objects.get(pk=book_id)
+     review = Review.objects.get(pk=review_id, book=book)
+  except ObjectDoesNotExist:
+     print("book or review doesn't exist")
+     return Response(status=status.HTTP_404_NOT_FOUND)
+  
+  
+  if review.user.id != request.data.get("user"):
+     print(f'review.user: {review.user.id}, request.user: {request.data.get("user")}')
+     return Response({"message" : f"The given user id: {request.data.get("user")} does not match the user id that submitted the review."},status=status.HTTP_400_BAD_REQUEST)
+  
+  # pass in the review object as 1st param to update it. partial = true for PATCH request. 
+  serializer = ReviewSerializer(review, data=request.data, partial=True)
+  if serializer.is_valid():
+     serializer.save()
+
+     return Response(serializer.data, status=status.HTTP_200_OK)
+  
+
+  return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 
