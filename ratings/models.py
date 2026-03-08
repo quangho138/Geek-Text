@@ -15,7 +15,12 @@ class Review(models.Model):
   )
 
   comment = models.CharField(max_length=255, blank=True, null=True)
+
+  # this is set to current time only when object is created
   created_at = models.DateTimeField(auto_now_add=True, null=True)
+
+  # this is set to current time everytime .save() is called
+  updated_at = models.DateTimeField(auto_now=True, null=True)
 
   class Meta:
     constraints = [
@@ -25,3 +30,17 @@ class Review(models.Model):
         )
     ]
     unique_together = ('user', 'book')
+
+
+
+
+ 
+"""
+In Django Shell: 
+
+with connection.cursor() as cursor:
+    cursor.execute("DELETE FROM sqlite_sequence WHERE name='ratings_review';")
+
+sets the auto_incrementing value of the id back to 0
+"""
+
