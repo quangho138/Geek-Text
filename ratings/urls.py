@@ -1,4 +1,8 @@
 from django.urls import path
+from .views import get_ratings
+
+urlpatterns = [
+    path('ratings/', get_ratings, name='get_ratings'),
 from . import views
 
 urlpatterns = [
