@@ -11,4 +11,6 @@ urlpatterns = [
     path("api/", include("books.urls")),
 
     path("api/", include("ratings.urls")),
+    path('api/', include('cart.urls')),
+    path('api/', include('ratings.urls'))
 ]
