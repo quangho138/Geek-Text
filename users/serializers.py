@@ -2,9 +2,9 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from .models import Profile
 
-TEMP_DEFAULT_HOME_ADDRESS = "TEMP_HOME_ADDRESS"
+DEFAULT_HOME_ADDRESS = "No address provided"
 
-class TEMPCreateUserSerializer(serializers.Serializer):
+class CreateUserSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
     password = serializers.CharField(write_only=True, min_length=6)
 
@@ -15,12 +15,11 @@ class TEMPCreateUserSerializer(serializers.Serializer):
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError("TEMP_ERROR_USERNAME_ALREADY_EXISTS")
+            raise serializers.ValidationError("Username already exists.")
         return value
 
     def create(self, validated_data):
-        TEMP_HOME_ADDRESS_VALUE = validated_data.pop("home_address", TEMP_DEFAULT_HOME_ADDRESS)
-
+        home_address_value = validated_data.pop("home_address", DEFAULT_HOME_ADDRESS)
         password = validated_data.pop("password")
 
         user = User(**validated_data)
@@ -29,7 +28,32 @@ class TEMPCreateUserSerializer(serializers.Serializer):
 
         Profile.objects.create(
             user=user,
-            home_address=TEMP_HOME_ADDRESS_VALUE
+            home_address=home_address_value
         )
 
         return user
+
+class ProfileSerializer(serializers.ModelSerializer):
+    home_address = serializers.CharField(source="profile.home_address")
+
+    class Meta:
+        model = User
+        fields = ["id", "username", "first_name", "last_name", "email", "home_address"]
+        read_only_fields = ["id", "username"]
+
+    def update(self, instance, validated_data):
+        profile_data = validated_data.pop("profile", {})
+
+        instance.first_name = validated_data.get("first_name", instance.first_name)
+        instance.last_name = validated_data.get("last_name", instance.last_name)
+        instance.email = validated_data.get("email", instance.email)
+        instance.save()
+
+        if profile_data:
+            instance.profile.home_address = profile_data.get(
+                "home_address",
+                instance.profile.home_address
+            )
+            instance.profile.save()
+
+        return instance
