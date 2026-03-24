@@ -1,8 +1,10 @@
 from django.urls import path
-from .views import TEMPCreateUserAPIView
+from .views import CreateUserAPIView, ProfileAPIView
 
-TEMP_USERS_ROUTE = "TEMP_USERS"
+CREATE_USER_ROUTE = "create_user"
+PROFILE_ROUTE = "profile"
 
 urlpatterns = [
-    path("TEMP_USERS/", TEMPCreateUserAPIView.as_view(), name=TEMP_USERS_ROUTE),
+    path("", CreateUserAPIView.as_view(), name=CREATE_USER_ROUTE),
+    path("<int:user_id>/", ProfileAPIView.as_view(), name=PROFILE_ROUTE),
 ]
