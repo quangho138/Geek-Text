@@ -4,4 +4,7 @@ from django.contrib import admin
 from django.contrib import admin
 from .models import Wishlist
 
-admin.site.register(Wishlist)
+@admin.register(Wishlist)
+class WishlistAdmin(admin.ModelAdmin):
+    list_display = ["id", "name", "user"]
+    filter_horizontal = ["books"]
