@@ -1,22 +1,21 @@
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
+from books.models import Book
 from .models import Rating
 from .serializers import RatingSerializer
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+
+from django.db.models import Avg
+from django.core.exceptions import ObjectDoesNotExist
 
 @api_view(['GET'])
 def get_ratings(request):
     ratings = Rating.objects.all()
     serializer = RatingSerializer(ratings, many=True)
     return Response(serializer.data)
-from books.models import Book
-from .models import Review
-from .serializers import ReviewSerializer
 
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
 
-from django.core.exceptions import ObjectDoesNotExist
 
 
 
@@ -27,14 +26,14 @@ def create_review(request, book_id):
   try:
       book = Book.objects.get(pk=book_id)
   except Book.DoesNotExist:
-    return Response(status=status.HTTP_404_NOT_FOUND)
+    return Response({"message" : f"The given book id: {book_id} does not exist."}, status=status.HTTP_404_NOT_FOUND)
   
   if request.method == 'GET':
-    reviews = Review.objects.filter(book_id=book_id)
+    reviews = Rating.objects.filter(book_id=book_id)
     if not reviews:
       return Response({"message" : "There are no reviews made for this book."}, status=status.HTTP_404_NOT_FOUND)
     
-    serializer = ReviewSerializer(reviews, many=True)
+    serializer = RatingSerializer(reviews, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
   
   if request.method == 'POST':
@@ -44,7 +43,7 @@ def create_review(request, book_id):
     if existing_review:
       return existing_review
 
-    serializer = ReviewSerializer(data=request.data)
+    serializer = RatingSerializer(data=request.data)
     if not serializer.is_valid():
       return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -54,17 +53,17 @@ def create_review(request, book_id):
 
 
 @api_view(['GET', 'PATCH'])
-def update_review(request, book_id, review_id):
+def get_update_review(request, book_id, review_id):
 
   try:
      book = Book.objects.get(pk=book_id)
-     review = Review.objects.get(pk=review_id, book=book)
+     review = Rating.objects.get(pk=review_id, book=book)
   except ObjectDoesNotExist:
-     print("book or review doesn't exist")
+     print("Review object: ", review, "Book object: ", book)
      return Response(status=status.HTTP_404_NOT_FOUND)
   
   if request.method == 'GET':
-    serializer = ReviewSerializer(review)
+    serializer = RatingSerializer(review)
     return Response(serializer.data)
   
   if request.method == 'PATCH':
@@ -73,7 +72,7 @@ def update_review(request, book_id, review_id):
       return Response({"message" : f"The given user id: {request.data.get("user")} does not match the user id that submitted the review."},status=status.HTTP_400_BAD_REQUEST)
     
     # pass in the review object as 1st param to update it. partial = true for PATCH request. 
-    serializer = ReviewSerializer(review, data=request.data, partial=True)
+    serializer = RatingSerializer(review, data=request.data, partial=True)
     if not serializer.is_valid():
       return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -82,12 +81,26 @@ def update_review(request, book_id, review_id):
   
 
 
+@api_view(['GET'])
+def get_avg_rating(request, book_id):
 
+  try:
+    book = Book.objects.get(pk=book_id)
+  except Book.DoesNotExist:
+    return Response({"message" : f"The given book id: {book_id} does not exist."}, status=status.HTTP_404_NOT_FOUND)
+  
+  # database query to get AVG rating
+  avg_rating = Rating.objects.filter(book=book).aggregate(Avg('rating')) # avg_rating = {'rating__avg': ...}
+  
+  if avg_rating['rating__avg'] is None:
+    return Response({'message': 'This book does not have any ratings made yet.'})
+  return Response(avg_rating, status=status.HTTP_200_OK)
 
+  
 
 
 
 def check_user_ratings(user, book):
-   if Review.objects.filter(user=user, book=book).exists():
+   if Rating.objects.filter(user=user, book=book).exists():
       return Response({"message" : f"User {user} has already made a review on {book}"}, status=status.HTTP_400_BAD_REQUEST)
    return None
