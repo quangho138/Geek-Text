@@ -132,6 +132,7 @@ def add_to_cart(request):
     """
     # Get data from request
     book_id = request.data.get('book_id')
+    user_id = request.data.get('user_id')
     quantity = request.data.get('quantity', 1)
     
     # Validate book_id
@@ -140,7 +141,12 @@ def add_to_cart(request):
             {'error': 'book_id is required'},
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+    # Validate user_id
+    if not user_id:
+        return Response(
+            {'error': 'user_id is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     # Validate quantity
     try:
         quantity = int(quantity)
@@ -154,6 +160,14 @@ def add_to_cart(request):
             {'error': 'quantity must be a valid number'},
             status=status.HTTP_400_BAD_REQUEST
         )
+    # Check if user exists
+    try:
+        book = User.objects.get(id=book_id)
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'User not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
     
     # Check if book exists
     try:
@@ -163,10 +177,10 @@ def add_to_cart(request):
             {'error': 'Book not found'},
             status=status.HTTP_404_NOT_FOUND
         )
-    
+
     # Check if item already in user's cart
     cart_item, created = CartItem.objects.get_or_create(
-        user=request.user,
+        user_id=user_id,
         book=book,
         defaults={
             'quantity': quantity,
