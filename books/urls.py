@@ -2,9 +2,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.book_list),
-    path('genre/', views.books_by_genre),
-    path('top-sellers/', views.top_sellers),
-    path('rating/', views.books_by_rating),
-    path('discount/', views.discount_books),
+    path("authors/", AuthorCreateView.as_view()),
+    path("books/", BookCreateView.as_view()),
+    path("books/top-sellers/", TopSellersView.as_view()),
+    path("books/<str:isbn>/", BookByISBNView.as_view()),
+    path("authors/<int:author_id>/books/", BooksByAuthorView.as_view()),
 ]
