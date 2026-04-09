@@ -1,13 +1,10 @@
 from django.urls import path
-from .views import (
-    AuthorCreateView,
-    BookCreateView,
-    BookByISBNView,
-    BooksByAuthorView,
-    TopSellersView,
-)
+from . import views
 
 urlpatterns = [
-    path("books/top-sellers/", views.top_sellers, name="top_sellers"),
-    path("books/genre/<str:genre>/", views.books_by_genre, name="books_by_genre"),
+    path('', views.book_list),
+    path('genre/', views.books_by_genre),
+    path('top-sellers/', views.top_sellers),
+    path('rating/', views.books_by_rating),
+    path('discount/', views.discount_books),
 ]
