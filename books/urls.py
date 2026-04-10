@@ -1,5 +1,11 @@
 from django.urls import path
-from . import views
+from .views import (
+    AuthorCreateView,
+    BookCreateView,
+    BookByISBNView,
+    BooksByAuthorView,
+    TopSellersView,
+)
 
 urlpatterns = [
     path("authors/", AuthorCreateView.as_view()),
