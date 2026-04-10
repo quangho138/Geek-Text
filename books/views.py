@@ -26,6 +26,35 @@ def discount_books(request):
     publisher = request.data.get('publisher')
     discount = request.data.get('discount_percent')
 
+    try:
+        discount = float(discount)
+    except ValueError:
+        return Response({"error": "discount_percent must be a number"}, status=400)
+
+    
+    if not books.exists():
+        return Response({"error": "No books found for this publisher"}, status=404)
+
+    for book in books:
+        discount_factor = Decimal(100 - discount) / Decimal(100)
+        book.price = book.price * discount_factor
+        book.save()
+
+class AuthorCreateView(generics.CreateAPIView):
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializer
+
+
+class BookCreateView(generics.CreateAPIView):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+
+
+class BookByISBNView(generics.RetrieveAPIView):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    lookup_field = "isbn"
+    
     def get(self, request, *args, **kwargs):
         isbn = kwargs.get("isbn")
 
@@ -37,23 +66,15 @@ def discount_books(request):
 
         return super().get(request, *args, **kwargs)
 
-
-    try:
-        discount = float(discount)
-    except ValueError:
-        return Response({"error": "discount_percent must be a number"}, status=400)
-
+class BooksByAuthorView(generics.ListAPIView):
+    serializer_class = BookSerializer
+    
     def get_queryset(self):
         author_id = self.kwargs["author_id"]
         return Book.objects.filter(author_id = author_id).order_by("name")
 
-    if not books.exists():
-        return Response({"error": "No books found for this publisher"}, status=404)
-
-    for book in books:
-        discount_factor = Decimal(100 - discount) / Decimal(100)
-        book.price = book.price * discount_factor
-        book.save()
+class TopSellersView(generics.ListAPIView):
+    serializer_class = BookSerializer
 
     def get_queryset(self):
         return Book.objects.order_by("-copies_sold")
